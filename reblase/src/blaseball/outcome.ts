@@ -1,3 +1,6 @@
+import { ChronGame } from "blaseball-lib/chronicler";
+import dayjs from "dayjs";
+
 export interface Outcome {
     name: string;
     emoji: string;
@@ -19,9 +22,11 @@ interface OutcomeType extends BaseOutcome {
 }
 
 const shameOutcome: OutcomeType = { name: "Shame", emoji: "\u{1F7E3}", search: [], color: "purple" };
+const spilloverOutcome: OutcomeType = { name: "Spillover", emoji: "\u{23F0}", search: [], color: "red" };
 
 export const outcomeTypes: OutcomeType[] = [
     shameOutcome,
+    spilloverOutcome,
     { name: "Party", emoji: "\u{1F389}", search: [/Partying/i], color: "gray" },
     { name: "Chain", emoji: "\u{1F517}", search: [/The Instability chains/i], color: "gray" },
     { name: "Reverb", emoji: "\u{1F30A}", search: [/reverb/i], color: "blue" },
@@ -49,7 +54,7 @@ export const outcomeTypes: OutcomeType[] = [
     { name: "Nullified", emoji: "\u{2B1B}", search: [/nullified/], color: "red" },
 ];
 
-export function getOutcomes(outcomes: string[], shame?: boolean, awayTeam?: string): Outcome[] {
+export function getOutcomes(outcomes: string[], shame?: boolean, awayTeam?: string, startTime?: string | null, endTime?: string | null): Outcome[] {
     const foundOutcomes = [];
 
     if (shame && awayTeam) {
@@ -58,6 +63,20 @@ export function getOutcomes(outcomes: string[], shame?: boolean, awayTeam?: stri
             text: `The ${awayTeam} were shamed!`,
         };
         foundOutcomes.push(outcome);
+    }
+
+    if (startTime && endTime) {
+        const startMoment = dayjs(startTime);
+        const endMoment = dayjs(endTime);
+        const diff = endMoment.diff(startMoment, "hour", true);
+
+        if (diff > 1) {
+            const outcome = {
+                ...spilloverOutcome,
+                text: "The game spilled over.",
+            }
+            foundOutcomes.push(outcome);
+        }
     }
 
     for (const outcomeText of outcomes) {
