@@ -1,12 +1,13 @@
-﻿import React from "react";
+﻿import React, { useState } from "react";
 
 import { Loading } from "../components/elements/Loading";
 import { Container } from "../components/layout/Container";
-import { getOutcomes } from "../blaseball/outcome";
+import { getOutcomes, BaseOutcome } from "../blaseball/outcome";
 import Error from "../components/elements/Error";
 import { Link } from "react-router-dom";
 import { useGameList, useTemporal } from "../blaseball/hooks";
 import dayjs from "dayjs";
+import OutcomePicker from "../components/elements/OutcomePicker";
 import { displaySeason, GameTeam, getAwayTeam, getHomeTeam } from "blaseball-lib/games";
 import Twemoji from "components/elements/Twemoji";
 
@@ -38,7 +39,7 @@ interface TemporalEvent extends BaseEvent {
 
 type BlaseEvent = GameEvent | TemporalEvent;
 
-interface TemporalType {
+interface TemporalType extends BaseOutcome {
     name: string;
     color: string;
     emoji: string;
@@ -95,6 +96,14 @@ const temporalTypeByGamma: Partial<Record<number, TemporalType>> = {
     4: temporalTypes.microphone,
     5: temporalTypes.lootcrates,
 };
+const temporalTypeList: TemporalType[] = [
+    temporalTypes.siteAlert,
+    temporalTypes.peanut,
+    temporalTypes.squid,
+    temporalTypes.coin,
+    temporalTypes.reader,
+    temporalTypes.lootcrates,
+];
 
 const EventRow = ({ evt }: { evt: BlaseEvent }) => {
     return (
@@ -146,6 +155,8 @@ const EventRow = ({ evt }: { evt: BlaseEvent }) => {
 export function EventsPage() {
     const { games, error, isLoading } = useGameList({ outcomes: true, order: "desc" });
     const { updates: temporalUpdates, error: temporalError, isLoading: temporalIsLoading } = useTemporal();
+
+    const [selectedOutcomes, setSelectedOutcomes] = useState<string[]>([]);
 
     if (error || temporalError) return <Error>{(error || temporalError).toString()}</Error>;
     if (isLoading || temporalIsLoading) return <Loading />;
@@ -218,8 +229,22 @@ export function EventsPage() {
         <Container className={"mt-4"}>
             <h2 className="text-2xl font-semibold mb-2">Recent game events</h2>
 
+            <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                    <div className="font-semibold mb-1">Filter by events</div>
+                    <OutcomePicker
+                        placeholder="Select event(s)..."
+                        selectedOutcomes={selectedOutcomes}
+                        setSelectedOutcomes={setSelectedOutcomes}
+                        temporalTypes={temporalTypeList}
+                    />
+                </div>
+            </div>
+
             <div className="flex flex-col">
-                {allEvents.map((evt, idx) => (
+                {allEvents
+                    .filter((evt, idx) => selectedOutcomes.length === 0 || selectedOutcomes.indexOf(evt.name) !== -1)
+                    .map((evt, idx) => (
                     <EventRow evt={evt} key={idx} />
                 ))}
             </div>
