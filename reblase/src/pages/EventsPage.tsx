@@ -5,7 +5,7 @@ import { Container } from "../components/layout/Container";
 import { getOutcomes, BaseOutcome } from "../blaseball/outcome";
 import Error from "../components/elements/Error";
 import { Link } from "react-router-dom";
-import { useGameList, useTemporal } from "../blaseball/hooks";
+import { useGameList, useTemporal, usePlayerTeamsList } from "../blaseball/hooks";
 import dayjs from "dayjs";
 import OutcomePicker from "../components/elements/OutcomePicker";
 import { displaySeason, GameTeam, getAwayTeam, getHomeTeam } from "blaseball-lib/games";
@@ -102,6 +102,7 @@ const temporalTypeList: TemporalType[] = [
     temporalTypes.squid,
     temporalTypes.coin,
     temporalTypes.reader,
+    temporalTypes.microphone,
     temporalTypes.lootcrates,
 ];
 
@@ -153,7 +154,7 @@ const EventRow = ({ evt }: { evt: BlaseEvent }) => {
 };
 
 export function EventsPage() {
-    const { games, error, isLoading } = useGameList({ outcomes: true, order: "desc" });
+    const { games, error, isLoading } = useGameList({outcomes: true, order: "desc" });
     const { updates: temporalUpdates, error: temporalError, isLoading: temporalIsLoading } = useTemporal();
 
     const [selectedOutcomes, setSelectedOutcomes] = useState<string[]>([]);
@@ -163,7 +164,7 @@ export function EventsPage() {
 
     const gameEvents: BlaseEvent[] = [];
     for (const game of games) {
-        const outcomes = getOutcomes(game.data.outcomes, game.data.shame, game.data.awayTeam, game.startTime, game.endTime);
+        const outcomes = getOutcomes(game.data.outcomes);
         for (const outcome of outcomes) {
             const lastEvent = gameEvents[gameEvents.length - 1];
             if (
@@ -237,6 +238,7 @@ export function EventsPage() {
                         selectedOutcomes={selectedOutcomes}
                         setSelectedOutcomes={setSelectedOutcomes}
                         temporalTypes={temporalTypeList}
+                        allowShame={false}
                     />
                 </div>
             </div>

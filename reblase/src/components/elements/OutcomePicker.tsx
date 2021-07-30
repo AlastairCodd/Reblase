@@ -14,6 +14,7 @@ export interface OutcomePickerProps {
     placeholder?: string;
     selectedOutcomes?: string[];
     temporalTypes?: TemporalType[];
+    allowShame?: boolean;
     setSelectedOutcomes?: (outcomes: string[]) => void;
 }
 
@@ -29,13 +30,14 @@ interface Group {
 
 export default function OutcomePicker(props: OutcomePickerProps) {
     const createSelectable = (outcomes: BaseOutcome[]) => outcomes
+        .filter((outcome) => props.allowShame ? true : outcome.name != "Shame" )
         .sort((a, b) => a.name.localeCompare(b.name))
-        .map((eventOutcome) => ({
-            value: eventOutcome.name,
+        .map((outcome) => ({
+            value: outcome.name,
             label: (
-                <span key={eventOutcome.name}>
-                    <Twemoji className="mr-1" emoji={eventOutcome.emoji} />
-                    {eventOutcome.name}
+                <span key={outcome.name}>
+                    <Twemoji className="mr-1" emoji={outcome.emoji} />
+                    {outcome.name}
                 </span>
             ),
         }))
