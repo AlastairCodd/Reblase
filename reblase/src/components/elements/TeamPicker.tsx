@@ -14,10 +14,12 @@ export interface TeamPickerProps {
 
 export default function TeamPicker(props: TeamPickerProps) {
     const formatOptionLabel = (option: ChronTeam, meta: { context: string }) => {
-        return (
+    	const fullName = option.data?.state?.scattered ? option.data.state.scattered.fullName : option.data.fullName;
+    	const nickname = option.data?.state?.scattered ? option.data.state.scattered.nickname : option.data.nickname;
+    	return (
             <span>
                 <Twemoji className="mr-1" emoji={option.data.emoji} />
-                {meta.context === "menu" ? option.data.fullName : option.data.nickname}
+                {meta.context === "menu" ? fullName : nickname}
             </span>
         );
     };
@@ -25,7 +27,11 @@ export default function TeamPicker(props: TeamPickerProps) {
     const teamIds = props.type === "league" ? leagueTeams : coffeeTeams;
     const options = props.teams
         .filter((team) => teamIds.includes(team.id))
-        .sort((a, b) => a.data.fullName.localeCompare(b.data.fullName));
+        .sort((a, b) => {
+        	const aName = a.data?.state?.scattered ? a.data.state.scattered.fullName : a.data.fullName;
+        	const bName = b.data?.state?.scattered ? b.data.state.scattered.fullName : b.data.fullName;
+        	return aName.localeCompare(bName);
+        });
 
     return (
         <Select
@@ -72,6 +78,7 @@ const leagueTeams = [
     "d9f89a8a-c563-493e-9d64-78e4f9a55d4a",
     "eb67ae5e-c4bf-46ca-bbbc-425cd34182ff",
     "f02aeae2-5e6a-4098-9842-02d2273f25c7",
+    "b47df036-3aa4-4b98-8e9e-fe1d3ff1894b", //paws
 ];
 
 const coffeeTeams = [
