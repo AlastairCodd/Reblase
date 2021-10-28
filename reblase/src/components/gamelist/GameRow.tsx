@@ -9,47 +9,55 @@ import { BlaseballTeam } from "blaseball-lib/models";
 import Twemoji from "../elements/Twemoji";
 import { displaySeason } from "blaseball-lib/games";
 
-const Events = React.memo((props: { outcomes: string[]; shame: boolean; awayTeam: string; startTime: string | null; endTime: string | null; }) => {
-    const outcomes = getOutcomes(props.outcomes, props.shame, props.awayTeam, props.startTime, props.endTime);
-    if (!outcomes) return <></>;
+const Events = React.memo(
+    (props: {
+        outcomes: string[];
+        shame: boolean;
+        awayTeam: string;
+        startTime: string | null;
+        endTime: string | null;
+    }) => {
+        const outcomes = getOutcomes(props.outcomes, props.shame, props.awayTeam, props.startTime, props.endTime);
+        if (!outcomes) return <></>;
 
-    const style: Record<string, string> = {
-        red: "bg-red-200 dark:bg-red-900 text-red-800 dark:text-red-200",
-        orange: "bg-orange-200 dark:bg-orange-900 text-orange-800 dark:text-orange-200",
-        blue: "bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
-        pink: "bg-pink-200 dark:bg-pin-900 text-pink-800 dark:text-pin-200",
-        purple: "bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200",
-        gray: "bg-gray-200 dark:bg-gray-900 text-gray-800 dark:text-gray-200",
-    };
+        const style: Record<string, string> = {
+            red: "bg-red-200 dark:bg-red-900 text-red-800 dark:text-red-200",
+            orange: "bg-orange-200 dark:bg-orange-900 text-orange-800 dark:text-orange-200",
+            blue: "bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
+            pink: "bg-pink-200 dark:bg-pin-900 text-pink-800 dark:text-pin-200",
+            purple: "bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200",
+            gray: "bg-gray-200 dark:bg-gray-900 text-gray-800 dark:text-gray-200",
+        };
 
-    const outcomesByType: Record<string, Outcome[]> = {};
-    for (const outcome of outcomes) {
-        if (!outcomesByType[outcome.name]) outcomesByType[outcome.name] = [];
-        outcomesByType[outcome.name].push(outcome);
+        const outcomesByType: Record<string, Outcome[]> = {};
+        for (const outcome of outcomes) {
+            if (!outcomesByType[outcome.name]) outcomesByType[outcome.name] = [];
+            outcomesByType[outcome.name].push(outcome);
+        }
+
+        return (
+            <span>
+                {Object.keys(outcomesByType).map((outcomeType, idx) => {
+                    const outcomes = outcomesByType[outcomeType];
+                    const combined = outcomes.map((o) => o.text).join("\n");
+
+                    return (
+                        <Tooltip
+                            key={idx}
+                            placement="top"
+                            overlay={<div className="whitespace-pre-line text-center">{combined}</div>}
+                        >
+                            <span className={`ml-1 tag-sm ${style[outcomes[0].color]}`}>
+                                {outcomeType}
+                                {outcomes.length > 1 ? <span className="ml-1"> x{outcomes.length}</span> : ""}
+                            </span>
+                        </Tooltip>
+                    );
+                })}
+            </span>
+        );
     }
-
-    return (
-        <span>
-            {Object.keys(outcomesByType).map((outcomeType, idx) => {
-                const outcomes = outcomesByType[outcomeType];
-                const combined = outcomes.map((o) => o.text).join("\n");
-
-                return (
-                    <Tooltip
-                        key={idx}
-                        placement="top"
-                        overlay={<div className="whitespace-pre-line text-center">{combined}</div>}
-                    >
-                        <span className={`ml-1 tag-sm ${style[outcomes[0].color]}`}>
-                            {outcomeType}
-                            {outcomes.length > 1 ? <span className="ml-1"> x{outcomes.length}</span> : ""}
-                        </span>
-                    </Tooltip>
-                );
-            })}
-        </span>
-    );
-});
+);
 
 const Duration = React.memo(
     (props: {
@@ -149,20 +157,30 @@ const OneLineTeamScore = React.memo((props: { away: TeamData; home: TeamData; cl
 
 const StandalonePitchers = React.memo(
     (props: {
+        gameComplete: boolean;
         homePitcher: string | null;
         awayPitcher: string | null;
         predictedHomePitcher: string | null;
         predictedAwayPitcher: string | null;
         className?: string;
     }) => {
-        return (
-            <div className={`text-sm text-gray-700 dark:text-gray-300 italic ${props.className}`}>
-                {props.awayPitcher ? props.awayPitcher : props.predictedAwayPitcher}
-                {" / "}
-                {props.homePitcher ? props.homePitcher : props.predictedHomePitcher}
-                {(!props.awayPitcher || !props.homePitcher) && " (est.)"}
-            </div>
-        );
+        const usePredictedPitchers = !props.awayPitcher || !props.homePitcher;
+        if (props.gameComplete && usePredictedPitchers) {
+            return (
+                <div className={`text-sm text-gray-700 dark:text-gray-300 italic ${props.className}`}>
+                    {"Game Cancelled"}
+                </div>
+            );
+        } else {
+            return (
+                <div className={`text-sm text-gray-700 dark:text-gray-300 italic ${props.className}`}>
+                    {props.awayPitcher ? props.awayPitcher : props.predictedAwayPitcher}
+                    {" / "}
+                    {props.homePitcher ? props.homePitcher : props.predictedHomePitcher}
+                    {usePredictedPitchers && " (est.)"}
+                </div>
+            );
+        }
     }
 );
 
@@ -188,8 +206,8 @@ export const GameRow = React.memo(
     }) => {
         const { data } = props.game;
 
-		const homeTeam: BlaseballTeam = props.teams[data.homeTeam];
-		const awayTeam: BlaseballTeam = props.teams[data.awayTeam];
+        const homeTeam: BlaseballTeam = props.teams[data.homeTeam];
+        const awayTeam: BlaseballTeam = props.teams[data.awayTeam];
 
         const home = {
             name: homeTeam?.state?.scattered ? homeTeam.state.scattered.nickname : data.homeTeamNickname,
@@ -226,12 +244,13 @@ export const GameRow = React.memo(
                         </div>
 
                         <div className="flex flex-row justify-end items-baseline space-x-2">
-                            <Events 
-                                outcomes={data.outcomes} 
-                                shame={data.shame} 
+                            <Events
+                                outcomes={data.outcomes ?? []}
+                                shame={data.shame}
                                 awayTeam={data.awayTeamNickname}
                                 startTime={props.game.startTime}
-                                endTime={props.game.endTime}/>
+                                endTime={props.game.endTime}
+                            />
                             <Duration
                                 gameId={props.game.gameId}
                                 startTime={props.game.startTime}
@@ -247,6 +266,7 @@ export const GameRow = React.memo(
                     <SeasonDay season={data.season} day={data.day} className="text-center w-10" />
                     <OneLineTeamScore home={home} away={away} />
                     <StandalonePitchers
+                        gameComplete={data.gameComplete}
                         awayPitcher={data.awayPitcherName}
                         homePitcher={data.homePitcherName}
                         predictedAwayPitcher={props.predictedAwayPitcher}
@@ -255,12 +275,13 @@ export const GameRow = React.memo(
                     />
 
                     <div className="flex flex-row justify-end items-baseline space-x-2">
-                        <Events 
-                            outcomes={data.outcomes} 
-                            shame={data.shame} 
+                        <Events
+                            outcomes={data.outcomes ?? []}
+                            shame={data.shame}
                             awayTeam={data.awayTeamNickname}
                             startTime={props.game.startTime}
-                            endTime={props.game.endTime}/>
+                            endTime={props.game.endTime}
+                        />
                         <Duration
                             gameId={props.game.gameId}
                             startTime={props.game.startTime}
@@ -313,12 +334,13 @@ export const FightRow = React.memo(
                         </div>
 
                         <div className="flex flex-row justify-end items-baseline space-x-2">
-                            <Events 
-                                outcomes={data.outcomes} 
-                                shame={data.shame} 
+                            <Events
+                                outcomes={data.outcomes ?? []}
+                                shame={data.shame}
                                 awayTeam={data.awayTeamNickname}
                                 startTime={null}
-                                endTime={null}/>
+                                endTime={null}
+                            />
                         </div>
                     </div>
                 </div>
@@ -327,6 +349,7 @@ export const FightRow = React.memo(
                     <SeasonDay season={data.season} day={"X"} className="text-center w-8" />
                     <OneLineTeamScore home={home} away={away} />
                     <StandalonePitchers
+                        gameComplete={data.gameComplete}
                         awayPitcher={data.awayPitcherName}
                         homePitcher={data.homePitcherName}
                         predictedAwayPitcher={null}
@@ -335,12 +358,13 @@ export const FightRow = React.memo(
                     />
 
                     <div className="flex flex-row justify-end items-baseline space-x-2">
-                        <Events 
-                            outcomes={data.outcomes} 
-                            shame={data.shame} 
+                        <Events
+                            outcomes={data.outcomes ?? []}
+                            shame={data.shame}
                             awayTeam={data.awayTeamNickname}
                             startTime={null}
-                            endTime={null}/>
+                            endTime={null}
+                        />
                     </div>
                 </div>
             </Link>
