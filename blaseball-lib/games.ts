@@ -3,8 +3,6 @@ import { BlaseballFeedSeasonList, BlaseballGame } from "./models";
 
 export const STATIC_ID = "thisidisstaticyo";
 
-export const STATIC_ID = "thisidisstaticyo";
-
 export interface GameTeam {
     id: TeamID;
     name: string;
