@@ -255,6 +255,7 @@ export function SeasonPage() {
                     <div className="font-semibold mb-1">Filter by events</div>
                     <OutcomePicker
                         placeholder="Select event(s)..."
+                        games={games}
                         selectedOutcomes={selectedOutcomes}
                         setSelectedOutcomes={setSelectedOutcomes}
                     />
